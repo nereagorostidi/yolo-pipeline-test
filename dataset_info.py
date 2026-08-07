@@ -9,6 +9,7 @@ IMG_EXTENSIONS = (".jpg", ".jpeg", ".png", ".bmp")
 
 
 def contar_imagenes(carpeta):
+    """Cuenta archivos de imagen en una carpeta (None si la carpeta no existe)."""
     if not os.path.isdir(carpeta):
         return None
     return sum(
