@@ -12,7 +12,6 @@ Proyecto del taller de Inteligencia Artificial: un modelo de detección de objet
 | `deteccion_video.py` | Aplica el modelo ya entrenado sobre un vídeo, muestra una ventana en vivo con las detecciones y guarda el resultado en `output.mp4`. |
 | `runs/detect/` | Carpetas generadas automáticamente por cada entrenamiento (pesos del modelo, gráficas, métricas). |
 | `train/`, `valid/`, `test/` | Imágenes y etiquetas del dataset (formato YOLO), descargadas de Roboflow. |
-| `README.dataset.txt` / `README.roboflow.txt` | Ficheros originales del dataset: licencia (CC BY 4.0) y detalles del preprocesado/augmentación aplicados por Roboflow. |
 
 ## El dataset
 
