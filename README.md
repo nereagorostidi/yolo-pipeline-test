@@ -10,6 +10,8 @@ Proyecto del taller de Inteligencia Artificial: un modelo de detección de objet
 | `dataset_info.py` | Muestra por pantalla cuántas imágenes hay en train/valid y qué clases están configuradas. |
 | `entrena.py` | Entrena el modelo YOLO con el dataset de frutas. |
 | `deteccion_video.py` | Aplica el modelo ya entrenado sobre un vídeo, muestra una ventana en vivo con las detecciones y guarda el resultado en `output/`. |
+| `samples/` | Vídeos de ejemplo (`video_frutas.mp4`, `video_dron.mp4`) para probar `deteccion_video.py`. |
+| `output/` | Vídeos anotados generados por `deteccion_video.py`, con el mismo nombre que el vídeo de origen. |
 | `runs/detect/` | Carpetas generadas automáticamente por cada entrenamiento (pesos del modelo, gráficas, métricas). |
 | `train/`, `valid/`, `test/` | Imágenes y etiquetas del dataset (formato YOLO), descargadas de Roboflow. |
 
@@ -42,16 +44,16 @@ Las carpetas de resultados se nombran con el número de épocas con el que se en
 
 ## Cómo probarlo sobre un video
 
-El nombre del vídeo se pasa como parámetro por línea de comandos (ya no lo pregunta por terminal):
+El nombre del vídeo se pasa como parámetro por línea de comandos:
 
 ```bash
-python deteccion_video.py video_dron.mp4
+python deteccion_video.py samples/video_dron.mp4
 ```
 
-Puedes usar tu propio vídeo (cópialo a la carpeta del proyecto primero) o probar con los dos de ejemplo que ya están subidos al repositorio:
+Puedes usar tu propio vídeo (cópialo a la carpeta del proyecto, o a `samples/`, y usa esa ruta) o probar con los dos de ejemplo que ya están subidos al repositorio dentro de `samples/`:
 
-- **`video_frutas.mp4`** — grabado con el móvil.
-- **`video_dron.mp4`** — grabado con el dron.
+- **`samples/video_frutas.mp4`** — grabado con el móvil.
+- **`samples/video_dron.mp4`** — grabado con el dron.
 
 El script analiza cada frame con el modelo entrenado, muestra una ventana en vivo con las cajas detectadas y guarda el vídeo anotado en la carpeta `output/`, con el mismo nombre que el vídeo original (por ejemplo, `video_dron.mp4` → `output/video_dron.mp4`).
 
@@ -68,7 +70,7 @@ Además del vídeo (obligatorio), se pueden ajustar por línea de comandos:
 Ejemplo cambiando varios a la vez:
 
 ```bash
-python deteccion_video.py video_dron.mp4 --conf 0.6 --vid-stride 1 --no-augment
+python deteccion_video.py samples/video_dron.mp4 --conf 0.6 --vid-stride 1 --no-augment
 ```
 
 Si no se indica ningún parámetro opcional, se usan los valores por defecto de la tabla. Para ver la ayuda completa con todos los parámetros disponibles y sus valores por defecto:
