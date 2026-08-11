@@ -1,3 +1,4 @@
+import argparse
 import os
 import cv2
 from ultralytics import YOLO
@@ -5,12 +6,24 @@ from ultralytics import YOLO
 # Cargar VUESTRO cerebro entrenado
 model = YOLO('runs/detect/mi_modelo_frutas-80/weights/best.pt')
 
-VID_STRIDE = 10  # solo procesa 1 de cada x frames que indicas, para ir mas rapido
+# Recibir el nombre del video y los parametros de deteccion por linea de comandos
+parser = argparse.ArgumentParser(
+    description='Detector de frutas YOLO sobre un video.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+parser.add_argument('video_path', help='Ruta del video a analizar (ej. video_dron.mp4)')
+parser.add_argument('--conf', type=float, default=0.5,
+                     help='Confianza minima para mostrar una deteccion (subir = menos falsos positivos, bajar = menos frutas sin detectar)')
+parser.add_argument('--vid-stride', type=int, default=3,
+                     help='Analiza 1 de cada N frames (1 = analiza todos; subirlo va mas rapido pero puede saltarse frutas que pasan rapido)')
+parser.add_argument('--augment', action=argparse.BooleanOptionalAction, default=True,
+                     help='Test-time augmentation: analiza cada frame varias veces (flips/escalas) y combina resultados, mas preciso pero mas lento. Usa --no-augment para desactivarlo')
+args = parser.parse_args()
 
-# Preguntar el nombre del video por pantalla, en vez de tenerlo fijo en el codigo
-video_path = input('¿Como se llama el video a analizar? (ej. video_dron.mp4): ').strip()
-while not os.path.isfile(video_path):
-    video_path = input(f'No encuentro "{video_path}". Prueba de nuevo: ').strip()
+video_path = args.video_path
+VID_STRIDE = args.vid_stride
+if not os.path.isfile(video_path):
+    raise SystemExit(f'No encuentro "{video_path}"')
 
 # fps original del video, para que el output.mp4 dure lo mismo que el original
 cap_info = cv2.VideoCapture(video_path)
@@ -22,11 +35,11 @@ cap_info.release()
 results = model.predict(
     source=video_path,
     imgsz=640,       # igual que el imgsz de entrenamiento; a menos resolucion se pierde detalle y confunde mas las clases
-    conf=0.5,        # confianza minima para mostrar una deteccion (subir = menos falsos positivos, bajar = menos frutas sin detectar)
-    vid_stride= VID_STRIDE,    # 1 = analiza todos los frames; subirlo va mas rapido pero puede saltarse frutas que pasan rapido
+    conf=args.conf,        # confianza minima para mostrar una deteccion (subir = menos falsos positivos, bajar = menos frutas sin detectar)
+    vid_stride=VID_STRIDE,    # 1 = analiza todos los frames; subirlo va mas rapido pero puede saltarse frutas que pasan rapido
     stream=True,
     verbose=False,
-    augment=True     # test-time augmentation: analiza cada frame varias veces (flips/escalas) y combina resultados, mas preciso pero mas lento
+    augment=args.augment     # test-time augmentation: analiza cada frame varias veces (flips/escalas) y combina resultados, mas preciso pero mas lento
 )
 
 writer = None
@@ -35,8 +48,10 @@ for r in results:
 
     if writer is None:
         h, w = annotated_frame.shape[:2]
+        os.makedirs('output', exist_ok=True)
+        output_path = os.path.join('output', os.path.basename(video_path))
         writer = cv2.VideoWriter(
-            'output.mp4',
+            output_path,
             cv2.VideoWriter_fourcc(*'mp4v'),
             fps_original / VID_STRIDE,
             (w, h),

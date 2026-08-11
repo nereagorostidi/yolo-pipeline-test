@@ -8,8 +8,8 @@ Proyecto del taller de Inteligencia Artificial: un modelo de detección de objet
 |---|---|
 | `data.yaml` | Configuración del dataset: rutas de train/valid/test y las clases de frutas. |
 | `dataset_info.py` | Muestra por pantalla cuántas imágenes hay en train/valid y qué clases están configuradas. |
-| `prueba1.py` | Entrena el modelo YOLO con el dataset de frutas. |
-| `deteccion_video.py` | Aplica el modelo ya entrenado sobre un vídeo, muestra una ventana en vivo con las detecciones y guarda el resultado en `output.mp4`. |
+| `entrena.py` | Entrena el modelo YOLO con el dataset de frutas. |
+| `deteccion_video.py` | Aplica el modelo ya entrenado sobre un vídeo, muestra una ventana en vivo con las detecciones y guarda el resultado en `output/`. |
 | `runs/detect/` | Carpetas generadas automáticamente por cada entrenamiento (pesos del modelo, gráficas, métricas). |
 | `train/`, `valid/`, `test/` | Imágenes y etiquetas del dataset (formato YOLO), descargadas de Roboflow. |
 
@@ -22,10 +22,10 @@ Proyecto del taller de Inteligencia Artificial: un modelo de detección de objet
 
 ```bash
 pip install ultralytics pyyaml opencv-python
-python prueba1.py
+python entrena.py
 ```
 
-`prueba1.py` parte de los pesos preentrenados `yolo11n.pt` y entrena hasta 80 épocas, con parada automática (`patience=20`) si el modelo deja de mejorar en validación. El resultado se guarda en `runs/detect/mi_modelo_frutas*/weights/best.pt` (cada ejecución crea una carpeta nueva para no pisar entrenamientos anteriores).
+`entrena.py` parte de los pesos preentrenados `yolo11n.pt` y entrena hasta 80 épocas, con parada automática (`patience=20`) si el modelo deja de mejorar en validación. El resultado se guarda en `runs/detect/mi_modelo_frutas*/weights/best.pt` (cada ejecución crea una carpeta nueva para no pisar entrenamientos anteriores).
 
 ### Los entrenamientos guardados en `runs/detect/`
 
@@ -42,28 +42,39 @@ Las carpetas de resultados se nombran con el número de épocas con el que se en
 
 ## Cómo probarlo sobre un video
 
+El nombre del vídeo se pasa como parámetro por línea de comandos (ya no lo pregunta por terminal):
+
 ```bash
-python deteccion_video.py
+python deteccion_video.py video_dron.mp4
 ```
-
-Al ejecutarlo, el script pregunta por terminal qué vídeo quieres analizar:
-
-```
-¿Como se llama el video a analizar? (ej. video_dron.mp4):
-```
-
-Escribe el nombre del archivo de vídeo (tiene que estar en esta misma carpeta) y pulsa Enter. Si el nombre no existe, te lo preguntará de nuevo, hasta que se encuentre el archivo correctamente.
 
 Puedes usar tu propio vídeo (cópialo a la carpeta del proyecto primero) o probar con los dos de ejemplo que ya están subidos al repositorio:
 
 - **`video_frutas.mp4`** — grabado con el móvil.
 - **`video_dron.mp4`** — grabado con el dron.
 
-En cualquier caso, el script analiza cada frame con el modelo entrenado, muestra una ventana en vivo con las cajas detectadas y guarda el vídeo anotado como `output.mp4`. Parámetros clave configurables dentro del script:
+El script analiza cada frame con el modelo entrenado, muestra una ventana en vivo con las cajas detectadas y guarda el vídeo anotado en la carpeta `output/`, con el mismo nombre que el vídeo original (por ejemplo, `video_dron.mp4` → `output/video_dron.mp4`).
 
-- `imgsz`: resolución de análisis (640 = misma que en el entrenamiento, más preciso).
-- `conf`: confianza mínima para mostrar una detección.
-- `vid_stride`: cuántos frames saltar (1 = analiza todos, más lento pero no se pierde nada).
-- `augment`: test-time augmentation, mejora la precisión a cambio de velocidad.
+### Parámetros opcionales
 
-Es un ajuste de velocidad vs. precisión: valores más altos de precisión (`imgsz` alto, `vid_stride=1`, `augment=True`) hacen el proceso más lento.
+Además del vídeo (obligatorio), se pueden ajustar por línea de comandos:
+
+| Parámetro | Qué hace | Por defecto |
+|---|---|---|
+| `--conf` | Confianza mínima para mostrar una detección (subir = menos falsos positivos, bajar = menos frutas sin detectar). | `0.5` |
+| `--vid-stride` | Cuántos frames saltar (1 = analiza todos, más lento pero no se pierde nada). | `3` |
+| `--augment` / `--no-augment` | Test-time augmentation: analiza cada frame varias veces (flips/escalas) y combina resultados, mejora la precisión a cambio de velocidad. | activado |
+
+Ejemplo cambiando varios a la vez:
+
+```bash
+python deteccion_video.py video_dron.mp4 --conf 0.6 --vid-stride 1 --no-augment
+```
+
+Si no se indica ningún parámetro opcional, se usan los valores por defecto de la tabla. Para ver la ayuda completa con todos los parámetros disponibles y sus valores por defecto:
+
+```bash
+python deteccion_video.py --help
+```
+
+Es un ajuste de velocidad vs. precisión: valores más altos de precisión (`vid_stride=1`, `--augment`) hacen el proceso más lento. La resolución de análisis (`imgsz=640`, misma que en el entrenamiento) no es configurable por parámetro, se fija dentro del script.
